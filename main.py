@@ -1,6 +1,7 @@
 from sanic import Sanic
 from sanic.response import text
 from views.add import AddView
+from blueprint.calc import calc
 
 app = Sanic("MyHelloWorldApp")
 
@@ -18,6 +19,7 @@ async def tag_handler(request, tag):
 
 app.add_route(AddView.as_view(), "/add")
 
+app.blueprint(calc)  # Register the blueprint
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8000, dev=True)
