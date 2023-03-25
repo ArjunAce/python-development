@@ -19,6 +19,26 @@ async def get_todos(request):
         return response.json({"error": "something went wrong"}, status=500)
 
 
+@api_blueprint.route("/get_todos_by_status", methods=["GET"])
+async def get_todos_by_status(request):
+    status = request.args.get("status", None)
+
+    if status is None:
+        return response.json({"error": "Missing status parameter"}, status=400)
+
+    status = status.lower()
+    status = True if status == "true" else False if status == "false" else None
+    if status is None:
+        return response.json({"error": "Invalid status parameter"}, status=400)
+
+    try:
+        todos = await TodoList.query.where(TodoList.status == status).gino.all()
+        return response.json([todo_to_dict(todo) for todo in todos])
+    except Exception as e:
+        logger.error(e)
+        return response.json({"error": "Something went wrong"}, status=500)
+
+
 @api_blueprint.route("/add_todo", methods=["POST"])
 async def add_todo(request):
     logger.info("Adding a new todo")
