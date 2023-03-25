@@ -45,8 +45,8 @@ async def get_todo_by_id(request):
     try:
         todo = await TodoList.get(todo_id)
         if todo:
-            return response.json(dict(todo))
-        return response.json({"error": "No todo found"}, status=404)
+            return response.json(todo_to_dict(todo))
+        return response.json({"error": "No todo found"}, status=200)
     except Exception as e:
         logger.error(e)
         return response.json({"error": "something went wrong"}, status=500)
@@ -54,18 +54,21 @@ async def get_todo_by_id(request):
 
 @api_blueprint.route("/update_todo", methods=["POST"])
 async def update_todo(request):
-    todo_id = request.json["id"]
-    logger.info(f"Updating todo with ID {todo_id}")
     try:
+        todo_id = request.json["id"]
+        item = request.json["item"]
+        status = request.json["status"]
+        logger.info(f"Updating todo with ID {todo_id}")
         todo = await TodoList.get(todo_id)
         if todo:
             await todo.update(
-                item=request.json["item"],
-                created_at=request.json["created_at"],
-                status=request.json["status"]
+                item=item,
+                status=status
             ).apply()
-            return response.json({"success": "Todo updated"})
-        return response.json({"error": "No todo found"}, status=404)
+            return response.json({"success": "Todo updated", **todo_to_dict(todo)})
+        return response.json({"error": "No todo found"}, status=200)
+    except KeyError:
+        return response.json({"error": "Todo ID, item and status are required"}, status=400)
     except Exception as e:
         logger.error(e)
         return response.json({"error": "something went wrong"}, status=500)
