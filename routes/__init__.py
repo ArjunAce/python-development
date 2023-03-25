@@ -2,6 +2,8 @@ from sanic import response
 from sanic.log import logger
 from sanic.blueprints import Blueprint
 from models.todo_list import TodoList
+from datetime import datetime
+from utils import todo_to_dict
 
 api_blueprint = Blueprint("api",  url_prefix='/api')
 
@@ -11,25 +13,29 @@ async def get_todos(request):
     logger.info("Fetching all todos")
     try:
         todos = await TodoList.query.gino.all()
+        return response.json([todo_to_dict(todo) for todo in todos])
     except Exception as e:
         logger.error(e)
         return response.json({"error": "something went wrong"}, status=500)
-    return response.json([dict(todo) for todo in todos])
 
 
 @api_blueprint.route("/add_todo", methods=["POST"])
 async def add_todo(request):
     logger.info("Adding a new todo")
     try:
+        item = request.json["item"]
+        status = request.json.get("status", False)
+        created_at = datetime.now()
+
         todo = await TodoList.create(
-            item=request.json["item"],
-            created_at=request.json["created_at"],
-            status=request.json["status"]
+            item=item,
+            created_at=created_at,
+            status=status
         )
+        return response.json({"id": todo.id, "created_at": created_at.strftime("%Y-%m-%d %H:%M:%S")})
     except Exception as e:
         logger.error(e)
         return response.json({"error": "something went wrong"}, status=500)
-    return response.json({"id": todo.id})
 
 
 @api_blueprint.route("/get_todo_by_id", methods=["POST"])
@@ -78,6 +84,7 @@ async def delete_todo(request):
     except Exception as e:
         logger.error(e)
         return response.json({"error": "something went wrong"}, status=500)
+
 
 def init_routes(app):
     logger.info(f"Initializing routes")

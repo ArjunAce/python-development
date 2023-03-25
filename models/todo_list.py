@@ -1,3 +1,4 @@
+from sqlalchemy import DateTime
 from gino.ext.sanic import Gino
 from sanic.log import logger
 from config import DB_DSN
@@ -21,5 +22,5 @@ class TodoList(db.Model):
 
     id = db.Column(db.BigInteger(), primary_key=True, autoincrement=True)
     item = db.Column(db.String())
-    created_at = db.Column(db.Date())
+    created_at = db.Column(DateTime)
     status = db.Column(db.Boolean())
