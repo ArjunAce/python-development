@@ -68,7 +68,7 @@ async def update_todo(request):
             return response.json({"success": "Todo updated", **todo_to_dict(todo)})
         return response.json({"error": "No todo found"}, status=200)
     except KeyError:
-        return response.json({"error": "Todo ID, item and status are required"}, status=400)
+        return response.json({"error": "id, item and status are required"}, status=400)
     except Exception as e:
         logger.error(e)
         return response.json({"error": "something went wrong"}, status=500)
@@ -76,14 +76,16 @@ async def update_todo(request):
 
 @api_blueprint.route("/delete_todo", methods=["POST"])
 async def delete_todo(request):
-    todo_id = request.json["id"]
-    logger.info(f"Deleting todo with ID {todo_id}")
     try:
+        todo_id = request.json["id"]
+        logger.info(f"Deleting todo with ID {todo_id}")
         todo = await TodoList.get(todo_id)
         if todo:
             await todo.delete()
-            return response.json({"success": "Todo deleted"})
-        return response.json({"error": "No todo found"}, status=404)
+            return response.json({"success": "Todo deleted", **todo_to_dict(todo)})
+        return response.json({"error": "No todo found"}, status=200)
+    except KeyError:
+        return response.json({"error": "id is required"}, status=400)
     except Exception as e:
         logger.error(e)
         return response.json({"error": "something went wrong"}, status=500)
