@@ -5,13 +5,16 @@ from blueprint.calc import calc
 
 app = Sanic("MyHelloWorldApp")
 
+
 @app.get("/")
 async def hello_world(request):
-   return text("Hello, world.")
+    return text("Hello, world.")
+
 
 @app.route('/test')
 async def test(request):
     return text(f"Test endpoint")
+
 
 @app.route('/tags/<tag>')
 async def tag_handler(request, tag):
