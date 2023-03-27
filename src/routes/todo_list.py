@@ -5,6 +5,7 @@ from models.todo_list import TodoList
 from models.users import Users
 from datetime import datetime
 from utils import todo_to_dict
+from models import db
 
 todo_blueprint = Blueprint("todos",  url_prefix='/api')
 
@@ -13,8 +14,26 @@ todo_blueprint = Blueprint("todos",  url_prefix='/api')
 async def get_todos(request):
     logger.info("Fetching all todos")
     try:
-        todos = await TodoList.query.gino.all()
-        return response.json([todo_to_dict(todo) for todo in todos])
+        todos = await db.select([
+            TodoList,
+            Users.name,
+            Users.age,
+        ]).select_from(
+            TodoList.join(Users)
+        ).gino.load(( 
+            TodoList,
+            Users.name,
+            Users.age
+            )
+        ).all()
+
+        todo_list = []
+        for todo, name, age in todos:
+            todo_dict = todo_to_dict(todo)
+            todo_dict.update({"name": name, "age": age})
+            todo_list.append(todo_dict)
+
+        return response.json(todo_list)
     except Exception as e:
         logger.error(e)
         return response.json({"error": "something went wrong"}, status=500)

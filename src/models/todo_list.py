@@ -9,3 +9,4 @@ class TodoList(db.Model):
     item = db.Column(db.String())
     created_at = db.Column(DateTime)
     status = db.Column(db.Boolean())
+    user_id = db.Column(db.Integer(), db.ForeignKey("users.id"))
