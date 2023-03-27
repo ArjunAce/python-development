@@ -73,7 +73,7 @@ async def get_todo_by_id(request):
         return response.json({"error": "something went wrong"}, status=500)
 
 
-@todo_blueprint.route("/update_todo", methods=["POST"])
+@todo_blueprint.route("/update_todo", methods=["PUT"])
 async def update_todo(request):
     try:
         todo_id = request.json["id"]
@@ -95,7 +95,7 @@ async def update_todo(request):
         return response.json({"error": "something went wrong"}, status=500)
 
 
-@todo_blueprint.route("/delete_todo", methods=["POST"])
+@todo_blueprint.route("/delete_todo", methods=["DELETE"])
 async def delete_todo(request):
     try:
         todo_id = request.json["id"]
