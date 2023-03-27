@@ -1,7 +1,6 @@
 from sanic import Sanic
-from sanic.response import text
 from routes import init_routes
-from models.todo_list import init_db
+from models import init_db
 
 app = Sanic("todo_app")
 

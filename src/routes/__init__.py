@@ -2,6 +2,7 @@ from sanic import response
 from sanic.log import logger
 from sanic.blueprints import Blueprint
 from models.todo_list import TodoList
+from models.users import Users
 from datetime import datetime
 from utils import todo_to_dict
 
