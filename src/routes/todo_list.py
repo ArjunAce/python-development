@@ -52,8 +52,28 @@ async def get_todos_by_status(request):
         return response.json({"error": "Invalid status parameter"}, status=400)
 
     try:
-        todos = await TodoList.query.where(TodoList.status == status).gino.all()
-        return response.json([todo_to_dict(todo) for todo in todos])
+        todos = await db.select([
+            TodoList,
+            Users.name,
+            Users.age,
+        ]).select_from(
+            TodoList.join(Users)
+        ).where(
+            TodoList.status == status
+        ).gino.load(( 
+            TodoList,
+            Users.name,
+            Users.age
+            )
+        ).all()
+
+        todo_list = []
+        for todo, name, age in todos:
+            todo_dict = todo_to_dict(todo)
+            todo_dict.update({"name": name, "age": age})
+            todo_list.append(todo_dict)
+
+        return response.json(todo_list)
     except Exception as e:
         logger.error(e)
         return response.json({"error": "Something went wrong"}, status=500)
@@ -65,12 +85,14 @@ async def add_todo(request):
     try:
         item = request.json["item"]
         status = request.json.get("status", False)
+        user_id = request.json["user_id"]
         created_at = datetime.now()
 
         todo = await TodoList.create(
             item=item,
             created_at=created_at,
-            status=status
+            status=status,
+            user_id=user_id
         )
         return response.json({"id": todo.id, "created_at": created_at.strftime("%Y-%m-%d %H:%M:%S")})
     except Exception as e:
@@ -85,7 +107,13 @@ async def get_todo_by_id(request):
     try:
         todo = await TodoList.get(todo_id)
         if todo:
-            return response.json(todo_to_dict(todo))
+            user = await Users.get(todo.user_id)
+            todo = {
+                **todo_to_dict(todo),
+                **user.to_dict()
+            }
+            return response.json(todo)
+
         return response.json({"error": "No todo found"}, status=200)
     except Exception as e:
         logger.error(e)
@@ -105,7 +133,12 @@ async def update_todo(request):
                 item=item,
                 status=status
             ).apply()
-            return response.json({"success": "Todo updated", **todo_to_dict(todo)})
+            user = await Users.get(todo.user_id)
+            todo = {
+                **todo_to_dict(todo),
+                **user.to_dict()
+            }
+            return response.json({"success": "Todo updated", **todo})
         return response.json({"error": "No todo found"}, status=200)
     except KeyError:
         return response.json({"error": "id, item and status are required"}, status=400)
@@ -122,7 +155,12 @@ async def delete_todo(request):
         todo = await TodoList.get(todo_id)
         if todo:
             await todo.delete()
-            return response.json({"success": "Todo deleted", **todo_to_dict(todo)})
+            user = await Users.get(todo.user_id)
+            todo = {
+                **todo_to_dict(todo),
+                **user.to_dict()
+            }
+            return response.json({"success": "Todo deleted", **todo})
         return response.json({"error": "No todo found"}, status=200)
     except KeyError:
         return response.json({"error": "id is required"}, status=400)
