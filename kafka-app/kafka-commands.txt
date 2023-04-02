@@ -1,0 +1,11 @@
+Start zookeeper
+zookeeper-server-start.sh /usr/local/kafka_2.13-3.4.0/config/zookeeper.properties
+
+Start kafka server
+kafka-server-start.sh /usr/local/kafka_2.13-3.4.0/config/server.properties
+
+Start a producer
+kafka-console-producer.sh --topic hello-world-topic --bootstrap-server localhost:9092
+
+Start a consumer
+kafka-console-consumer.sh --topic hello-world-topic --bootstrap-server localhost:9092 --from-beginning
